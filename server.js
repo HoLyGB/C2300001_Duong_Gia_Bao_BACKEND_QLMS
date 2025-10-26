@@ -4,6 +4,7 @@ const MongoDB = require("./app/utils/mongodb.util");
 
 async function startServer() {
     try {
+      
         await MongoDB.connect(config.db.uri);
         console.log("✅ Connected to the database!");
 
