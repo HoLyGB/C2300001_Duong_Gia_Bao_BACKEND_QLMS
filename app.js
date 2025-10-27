@@ -12,12 +12,20 @@ const contactsRouter = require("./app/routes/contact.route");
 const nxbRouter = require("./app/routes/nhaxuatban.route");
 const sachRouter = require("./app/routes/sach.route");
 const nhanVienRouter = require("./app/routes/nhanvien.route");
+const docGiaRouter = require("./app/routes/docgia.route");
+const theodoimuonsachRouter = require("./app/routes/theodoimuonsach.route");
+const taiKhoanAuthRouter = require("./app/routes/taikhoan.route");
+console.log("✅ Routes loaded: /api/taikhoan");
+
 
 // --- Routes ---
 app.use("/api/contacts", contactsRouter);
 app.use("/api/nhaxuatban", nxbRouter);
 app.use("/api/sach", sachRouter);
 app.use("/api/nhanvien", nhanVienRouter);
+app.use("/api/docgia", docGiaRouter);
+app.use("/api/theodoimuonsach", theodoimuonsachRouter);
+app.use("/api/taikhoan", taiKhoanAuthRouter);
 
 app.use((req, res, next) => {
  

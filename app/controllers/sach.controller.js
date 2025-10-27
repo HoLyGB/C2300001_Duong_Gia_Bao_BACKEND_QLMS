@@ -39,16 +39,7 @@ exports.findAll = async (req, res, next) => {
         );
     }
 };
-// const Nxb = require("../models/nxb.model");
 
-// exports.findAll = async (req, res) => {
-//   try {
-//     const data = await Nxb.find();
-//     res.json(data);
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// };
 
 
 // Tìm một nhà xuất bản bằng ID
