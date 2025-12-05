@@ -23,22 +23,29 @@ exports.create = async (req, res, next) => {
 };
 
 // Lấy danh sách theo dõi mượn sách
+// controller.js
+
 exports.findAll = async (req, res, next) => {
     let documents = [];
     try {
         const theoDoiService = new TheoDoiMuonSachService(MongoDB.client);
         const { maDocGia, maSach } = req.query;
 
+        // Tạo bộ lọc (filter) dựa trên query params
+        let filter = {};
         if (maDocGia) {
-            documents = await theoDoiService.findByMaDocGia(maDocGia);
-        } else if (maSach) {
-            documents = await theoDoiService.find({ maSach });
-        } else {
-            documents = await theoDoiService.find({});
+            filter.maDocGia = new ObjectId(maDocGia); // Nếu maDocGia lưu dạng ObjectId
         }
+        if (maSach) {
+            filter.maSach = new ObjectId(maSach); // Nếu maSach lưu dạng ObjectId
+        }
+
+        // Gọi hàm find đã sửa ở Service
+        documents = await theoDoiService.find(filter);
 
         return res.send(documents);
     } catch (error) {
+        console.log(error); // Log lỗi ra terminal để dễ debug
         return next(
             new ApiError(500, "Đã xảy ra lỗi khi lấy danh sách theo dõi mượn sách")
         );

@@ -4,15 +4,54 @@ const ApiError = require("../api-error");
 
 // ➕ Thêm nhân viên mới
 exports.create = async (req, res, next) => {
+
+    
+    // 1. Validate cơ bản
     if (!req.body?.hoTen || !req.body?.maNV) {
         return next(new ApiError(400, "Tên nhân viên và mã nhân viên không được để trống"));
     }
 
     try {
         const nhanVienService = new NhanVienService(MongoDB.client);
+
+        // --- BẮT ĐẦU ĐOẠN CODE BẠN ĐANG THIẾU ---
+        
+        // 2. Check xem mã NV đã có chưa?
+        // (Đây chính là chỗ gọi hàm findByMaNV mà nãy giờ mình nhắc)
+        const existingMaNV = await nhanVienService.findByMaNV(req.body.maNV);
+        if (existingMaNV) {
+            return res.status(409).json({ 
+                field: "maNV",
+                message: "Mã nhân viên này đã tồn tại!" 
+            });
+        }
+        if (req.body.email) {
+                    const existingEmail = await nhanVienService.findByEmail(req.body.email);
+                    if (existingEmail) {
+                        return res.status(409).json({ 
+                            field: "email",
+                            message: "Email này đã được sử dụng!" 
+                        });
+                    }
+                }
+        // 3. Check xem SĐT đã có chưa?
+        if (req.body.soDienThoai) {
+            const existingSDT = await nhanVienService.findBySDT(req.body.soDienThoai);
+            if (existingSDT) {
+                return res.status(409).json({ 
+                     field: "soDienThoai",
+                     message: "Số điện thoại này đã được sử dụng!" 
+                });
+            }
+        }
+        // --- KẾT THÚC ĐOẠN CODE THIẾU ---
+
+        // 4. Nếu không trùng thì mới tạo
         const document = await nhanVienService.create(req.body);
         return res.send({ message: "Nhân viên đã được thêm thành công", data: document });
+
     } catch (error) {
+        console.log("Lỗi Server:", error); // Log ra để dễ debug
         return next(new ApiError(500, "Đã xảy ra lỗi khi thêm nhân viên"));
     }
 };
@@ -57,12 +96,39 @@ exports.findOne = async (req, res, next) => {
 
 // ✏️ Cập nhật thông tin nhân viên
 exports.update = async (req, res, next) => {
-    if (Object.keys(req.body).length === 0) {
-        return next(new ApiError(400, "Dữ liệu cập nhật không được để trống"));
-    }
+    // 1. Kiểm tra dữ liệu rỗng
 
     try {
         const nhanVienService = new NhanVienService(MongoDB.client);
+        const idDangSua = req.params.id; // Lấy ID của nhân viên đang được sửa
+
+        if (req.body.email) {
+            const existingEmail = await nhanVienService.findByEmail(req.body.email);
+            
+            // Logic: Tìm thấy người dùng email này VÀ ID của người đó KHÁC ID đang sửa
+            if (existingEmail && existingEmail._id.toString() !== idDangSua) {
+                return res.status(409).json({ 
+                    field: "email",
+                    message: "Email này đã thuộc về nhân viên khác!" 
+                });
+            }
+        }
+
+        // 3. Kiểm tra trùng Số điện thoại
+        if (req.body.soDienThoai) {
+            const existingSDT = await nhanVienService.findBySDT(req.body.soDienThoai);
+            
+            // Logic: Tìm thấy SĐT này VÀ ID của người đó KHÁC ID đang sửa
+            if (existingSDT && existingSDT._id.toString() !== idDangSua) {
+                return res.status(409).json({ 
+                    field: "soDienThoai",
+                    message: "Số điện thoại này đã thuộc về nhân viên khác!" 
+                });
+            }
+        }
+        
+
+
         const document = await nhanVienService.update(req.params.id, req.body);
 
         if (!document) {
@@ -70,7 +136,9 @@ exports.update = async (req, res, next) => {
         }
 
         return res.send({ message: "Nhân viên đã được cập nhật thành công" });
+
     } catch (error) {
+        console.log("Lỗi Update:", error); // Log ra xem lỗi gì
         return next(
             new ApiError(500, `Lỗi khi cập nhật nhân viên với id=${req.params.id}`)
         );

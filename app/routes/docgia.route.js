@@ -12,5 +12,7 @@ router.route("/:id")
     .get(docgia.findOne)
     .put(docgia.update)
     .delete(docgia.delete);
-
+// Thêm vào trong router
+router.route("/:id/password")
+    .put(docgia.changePassword); // API đổi mật khẩu
 module.exports = router;

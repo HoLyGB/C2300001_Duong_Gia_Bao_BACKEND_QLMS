@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const ApiError = require("./app/api-error");
-
+const path = require("path");
 const app = express();
 
 app.use(cors());
@@ -27,6 +27,7 @@ app.use("/api/docgia", docGiaRouter);
 app.use("/api/theodoimuonsach", theodoimuonsachRouter);
 app.use("/api/taikhoan", taiKhoanAuthRouter);
 
+app.use("/uploads", express.static(path.join(__dirname, "uploads"))); 
 app.use((req, res, next) => {
  
   return next(new ApiError(404, "Resource not found"));

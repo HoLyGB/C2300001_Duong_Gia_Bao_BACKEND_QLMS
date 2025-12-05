@@ -7,32 +7,48 @@ class sachService {
     }
 
 
-    extractsachData(payload) {
-        const sach = {
-            tenSach: payload.tenSach,
-            donGia: Number(payload.donGia ?? 0),
-            soQuyen:Number(payload.soQuyen ?? 0),
-            namXuatBan:Number(payload.namXuatBan ?? 0),
-            maNXB:payload.maNXB ? new ObjectId(payload.maNXB) : null,
-            tacGia:payload.tacGia,
-            hinhAnh: payload.hinhAnh ?? null,
-        };
+// Trong file backend/app/services/sach.service.js
 
-        // Xóa các trường có giá trị là undefined
-        Object.keys(sach).forEach(
-            (key) => sach[key] === undefined && delete sach[key]
-        );
-        return sach;
-    }
+extractsachData(payload) {
+    const sach = {
+        tenSach: payload.tenSach,
+        donGia: Number(payload.donGia ?? 0),
+        soQuyen: Number(payload.soQuyen ?? 0),
+        namXuatBan: Number(payload.namXuatBan ?? 0),
+        tacGia: payload.tacGia,
+        
+        // --- SỬA DÒNG NÀY ---
+        // Kiểm tra kỹ: Nếu maNXB tồn tại VÀ là ID hợp lệ thì mới tạo ObjectId
+        // Nếu không thì gán null (để tránh lỗi BSONError: Argument passed in must be a string of 12 bytes...)
+        maNXB: (payload.maNXB && ObjectId.isValid(payload.maNXB)) 
+                ? new ObjectId(payload.maNXB) 
+                : null,
+
+        // Xử lý ảnh
+        hinhAnh: payload.hinhAnh || undefined, // Dùng undefined để bộ lọc bên dưới xử lý
+    };
+
+    // Xóa các trường undefined hoặc null
+    Object.keys(sach).forEach(
+        (key) => (sach[key] === undefined || sach[key] === null) && delete sach[key]
+    );
+    return sach;
+}
 
 
-    async create(payload) {
-        const sach = this.extractsachData(payload);
-        const result = await this.sach.insertOne(sach);
-        // Trả về document vừa được tạo bằng cách tìm lại qua _id
-        return result.value;
-    }
-
+async create(payload) {
+    const sach = this.extractsachData(payload);
+    
+    // Thêm vào Database
+    const result = await this.sach.insertOne(sach);
+    
+    // SỬA LẠI DÒNG NÀY:
+    // Trả về object sách vừa tạo kèm theo _id mới sinh ra
+    return { 
+        ...sach, 
+        _id: result.insertedId 
+    }; 
+}
 
     async find(filter) {
         const cursor = await this.sach.find(filter);

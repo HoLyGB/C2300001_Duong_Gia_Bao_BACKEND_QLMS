@@ -13,33 +13,38 @@ class DocGiaService {
     }
 
 
-     extractDocGiaData(payload) {
+// Trong file docgia.service.js
+
+extractDocGiaData(payload) {
     const docGia = {
-      maDG: payload.maDG?.trim() || null,
-      passwordHash: payload.passwordHash,
-      hoLot: payload.hoLot?.trim() || "",
-      ten: payload.ten?.trim() || "",
-      ngaySinh: payload.ngaySinh ? new Date(payload.ngaySinh) : null,  // "YYYY-MM-DD"
-      gioiTinh: Boolean(payload.gioiTinh),
-      diaChi: payload.diaChi || "",
-      soDienThoai: payload.soDienThoai || "",
-      email: payload.email || "",
-      vaiTro: payload.vaiTro?.trim() || "docgia",
+        maDG: payload.maDG?.trim(),
+        passwordHash: payload.passwordHash,
+        hoLot: payload.hoLot?.trim(),
+        ten: payload.ten?.trim(),
+        // Nếu có ngày sinh thì format, không thì thôi (để undefined)
+        ngaySinh: payload.ngaySinh ? new Date(payload.ngaySinh) : undefined,
+        gioiTinh: payload.gioiTinh !== undefined ? Boolean(payload.gioiTinh) : undefined,
+        diaChi: payload.diaChi,
+        soDienThoai: payload.soDienThoai,
+        email: payload.email, // Không dùng || "" ở đây nữa
+        vaiTro: payload.vaiTro?.trim()
     };
 
+    // Hàm lọc bỏ các trường undefined (giữ lại trường có dữ liệu)
     Object.keys(docGia).forEach(
-      (key) => docGia[key] === undefined && delete docGia[key]
+        (key) => docGia[key] === undefined && delete docGia[key]
     );
+    
     return docGia;
-  }
+}
 
   // ✅ thêm async để dùng await
   async create(payload) {
     const docGia = this.extractDocGiaData(payload);
 
     // Nếu có trường matKhau thì hash trước khi lưu
-    if (payload.matKhau) {
-      docGia.passwordHash = await bcrypt.hash(payload.matKhau, 10);
+    if (payload.password) {
+      docGia.passwordHash = await bcrypt.hash(payload.password, 10);
     }
 
     const result = await this.DocGia.insertOne(docGia);
@@ -57,6 +62,10 @@ class DocGiaService {
             ten: { $regex: new RegExp(ten), $options: "i" },
         });
     }
+      async findByMaDG(maDG) {
+    if (!maDG || typeof maDG !== "string") return null;
+    return await this.DocGia.findOne({ maDG: maDG.trim() });
+  }
     async findByTen(hoLot) {
             return await this.find({
                 hoLot: { $regex: new RegExp(hoLot), $options: "i" },
@@ -65,7 +74,9 @@ class DocGiaService {
     async findByEmail(email) {
             return await this.DocGia.findOne({ email });
         }
-
+async findBySDT(sdt) {
+        return await this.DocGia.findOne({ soDienThoai: sdt });
+    }
     async findById(id) {
         return await this.DocGia.findOne({
             _id: ObjectId.isValid(id) ? new ObjectId(id) : null,

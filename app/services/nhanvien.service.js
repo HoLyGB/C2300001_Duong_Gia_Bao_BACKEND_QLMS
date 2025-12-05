@@ -18,7 +18,9 @@ class NhanVienService {
             matKhau: payload.matKhau,
             chucVu: payload.chucVu ,
             diaChi: payload.diaChi,
+            email: payload.email,
             soDienThoai: payload.soDienThoai ?? null,
+            gioiTinh: payload.gioiTinh ?? null,
             vaiTro: payload.vaiTro?.trim() || "admin"
         };
 
@@ -51,7 +53,16 @@ class NhanVienService {
     if (!maNV || typeof maNV !== "string") return null;
     return await this.NhanVien.findOne({ maNV: maNV.trim() });
   }
+// 1. Thêm hàm tìm theo Email
+    async findByEmail(email) {
+        return await this.NhanVien.findOne({ email: email });
+    }
 
+    // 2. Thêm hàm tìm theo Số điện thoại
+    async findBySDT(sdt) {
+        // Lưu ý: Trong DB bạn lưu là "soDienThoai" nên ở đây phải query theo key đó
+        return await this.NhanVien.findOne({ soDienThoai: sdt });
+    }
   // Cập nhật
   async update(maNV, payload) {
     if (!maNV || Object.keys(payload).length === 0) return null;

@@ -12,8 +12,16 @@ exports.create = async (req, res, next) => {
         const nhaXuatBanService = new NhaXuatBanService(MongoDB.client);
         const document = await nhaXuatBanService.create(req.body);
         return res.send({ message: "Nhà xuất bản được thêm thành công" });
-        // return res.send(document);
+        
     } catch (error) {
+        
+        if (error.code === 11000) {
+            return next(
+                new ApiError(409, "Tên nhà xuất bản đã tồn tại.") 
+            );
+        }
+
+        console.log(error); 
         return next(
             new ApiError(500, "Đã xảy ra lỗi khi tạo nhà xuất bản")
         );
@@ -87,8 +95,15 @@ exports.update = async (req, res, next) => {
 
         return res.send({ message: "Nhà xuất bản đã được cập nhật thành công" });
     } catch (error) {
+        if (error.code === 11000) {
+            return next(
+                new ApiError(409, "Tên nhà xuất bản đã tồn tại.") 
+            );
+        }
+
+        console.log(error); 
         return next(
-            new ApiError(500, `Lỗi khi cập nhật nhà xuất bản với id=${req.params.id}`)
+            new ApiError(500, "Đã xảy ra lỗi khi cập nhật nhà xuất bản")
         );
     }
 };
